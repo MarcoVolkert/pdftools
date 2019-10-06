@@ -37,15 +37,39 @@ def interlace_per_dir(in_dir: str, out_dir: str):
             interlace(front_name, back_name, out_name)
 
 
-def merge(filenames: List[str], output: str):
+def merge2(filenames: List[str], output: str):
     merger = PyPDF2.PdfFileMerger()
+    pdfs = []
 
-    for pdf in filenames:
-        with open(pdf, 'rb') as f:
-            merger.append(f)
+    for filename in filenames:
+        pdf = open(filename, 'rb')
+        merger.append(pdf)
 
-    with open(output, 'wb') as f:
-        merger.write(f)
+    with open(output, 'wb') as pdf_out:
+        merger.write(pdf_out)
+
+    for pdf in pdfs:
+        pdf.close()
+
+
+def merge(filenames: List[str], output: str):
+    writer = PyPDF2.PdfFileWriter()
+    pdfs = []
+
+    for filename in filenames:
+        pdf = open(filename, 'rb')
+        reader = PyPDF2.PdfFileReader(pdf)
+
+        for i in range(0, reader.numPages):
+            writer.addPage(reader.getPage(i))
+
+        pdfs.append(pdf)
+
+    with open(output, "wb") as pdf_out:
+        writer.write(pdf_out)
+
+    for pdf in pdfs:
+        pdf.close()
 
 
 def merge_per_dir(in_dir: str, out_dir: str):
