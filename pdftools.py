@@ -3,6 +3,11 @@ from typing import List
 
 import PyPDF2
 import fpdf
+from svglib.svglib import svg2rlg
+from reportlab.graphics import renderPDF
+from natsort import natsorted
+
+__all__ = ["interlace", "interlace_per_dir", "merge", "merge_per_dir", "write_images", "merge_svgs_per_dir"]
 
 
 def interlace(front_name: str, back_name: str, out_name: str):
@@ -101,3 +106,31 @@ def _group(lst, n):
     [(0, 1, 2), (3, 4, 5), (6, 7, 8)]
     """
     return zip(*[lst[i::n] for i in range(n)])
+
+
+def merge_svgs_per_dir(in_dir="", out_dir=""):
+    if not in_dir:
+        in_dir = os.getcwd()
+
+    if not out_dir:
+        out_dir = os.getcwd()
+
+    for (dirpath, dirnames, filenames) in os.walk(in_dir):
+        basename = os.path.basename(dirpath)
+        if basename.startswith("."):
+            continue
+        out_name = os.path.join(out_dir, basename + ".pdf")
+        filenames = [os.path.join(dirpath, filename) for filename in filenames if ".svg" in filename]
+        filenames = natsorted(filenames)
+        if len(filenames) == 0:
+            continue
+        pdf_filenames = [convert_svg(filename) for filename in filenames]
+        print(pdf_filenames)
+        merge(pdf_filenames, out_name)
+
+
+def convert_svg(filename: str) -> str:
+    drawing = svg2rlg(filename)
+    pdf_name = filename.replace(".svg", ".pdf")
+    renderPDF.drawToFile(drawing, pdf_name)
+    return pdf_name

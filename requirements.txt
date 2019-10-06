@@ -1,2 +1,5 @@
+natsort
+reportlab
+svglib
 PyPDF2
 fpdf
