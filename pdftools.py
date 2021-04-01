@@ -134,3 +134,24 @@ def convert_svg(filename: str) -> str:
     pdf_name = filename.replace(".svg", ".pdf")
     renderPDF.drawToFile(drawing, pdf_name)
     return pdf_name
+    
+    
+def replace_last_page(filename: str, lastpage: str):
+    pdf_front = open(filename, 'rb')
+    pdf_back = open(lastpage, 'rb')
+    reader_front = PyPDF2.PdfFileReader(pdf_front)
+    reader_back = PyPDF2.PdfFileReader(pdf_back)
+    writer = PyPDF2.PdfFileWriter()
+
+    num_pages = reader_front.numPages
+
+    for i in range(0, num_pages - 1):
+        print(i, num_pages, num_pages - i)
+        writer.addPage(reader_front.getPage(i))
+    writer.addPage(reader_back.getPage(0))
+
+    with open(filename.replace(".pdf", "_merged.pdf"), "wb") as pdf_out:
+        writer.write(pdf_out)
+
+    pdf_front.close()
+    pdf_back.close()
