@@ -13,9 +13,9 @@ __all__ = ["interlace", "interlace_per_dir", "merge", "merge_per_dir", "write_im
 def interlace(front_name: str, back_name: str, out_name: str):
     pdf_front = open(front_name, 'rb')
     pdf_back = open(back_name, 'rb')
-    reader_front = PyPDF2.PdfFileReader(pdf_front)
-    reader_back = PyPDF2.PdfFileReader(pdf_back)
-    writer = PyPDF2.PdfFileWriter()
+    reader_front = PyPDF2.PdfReader(pdf_front)
+    reader_back = PyPDF2.PdfReader(pdf_back)
+    writer = PyPDF2.PdfWriter()
 
     num_pages = reader_front.numPages
     if not num_pages == reader_back.numPages:
@@ -23,8 +23,8 @@ def interlace(front_name: str, back_name: str, out_name: str):
 
     for i in range(0, num_pages):
         print(i, num_pages, num_pages - i)
-        writer.addPage(reader_front.getPage(i))
-        writer.addPage(reader_back.getPage(num_pages - 1 - i))
+        writer.add_page(reader_front.pages[i])
+        writer.add_page(reader_back.getPage(num_pages - 1 - i))
 
     with open(out_name, "wb") as pdf_out:
         writer.write(pdf_out)
@@ -43,7 +43,7 @@ def interlace_per_dir(in_dir: str, out_dir: str):
 
 
 def merge2(filenames: List[str], output: str):
-    merger = PyPDF2.PdfFileMerger()
+    merger = PyPDF2.PdfMerger()
     pdfs = []
 
     for filename in filenames:
@@ -58,15 +58,15 @@ def merge2(filenames: List[str], output: str):
 
 
 def merge(filenames: List[str], output: str):
-    writer = PyPDF2.PdfFileWriter()
+    writer = PyPDF2.PdfWriter()
     pdfs = []
 
     for filename in filenames:
         pdf = open(filename, 'rb')
-        reader = PyPDF2.PdfFileReader(pdf)
+        reader = PyPDF2.PdfReader(pdf)
 
         for i in range(0, reader.numPages):
-            writer.addPage(reader.getPage(i))
+            writer.add_page(reader.pages[i])
 
         pdfs.append(pdf)
 
@@ -75,6 +75,22 @@ def merge(filenames: List[str], output: str):
 
     for pdf in pdfs:
         pdf.close()
+
+def merge_many_pages(filename: str, output: str, page_multiplier: int):
+    writer = PyPDF2.PdfWriter()
+
+    pdf = open(filename, 'rb')
+    reader = PyPDF2.PdfReader(pdf)
+
+    for j in range(0, page_multiplier):
+        for i in range(0, len(reader.pages)):
+            writer.add_page(reader.pages[i])
+
+
+    with open(output, "wb") as pdf_out:
+        writer.write(pdf_out)
+
+    pdf.close()
 
 
 def merge_per_dir(in_dir: str, out_dir: str):
@@ -139,16 +155,16 @@ def convert_svg(filename: str) -> str:
 def replace_last_page(filename: str, lastpage: str):
     pdf_front = open(filename, 'rb')
     pdf_back = open(lastpage, 'rb')
-    reader_front = PyPDF2.PdfFileReader(pdf_front)
-    reader_back = PyPDF2.PdfFileReader(pdf_back)
-    writer = PyPDF2.PdfFileWriter()
+    reader_front = PyPDF2.PdfReader(pdf_front)
+    reader_back = PyPDF2.PdfReader(pdf_back)
+    writer = PyPDF2.PdfWriter()
 
     num_pages = reader_front.numPages
 
     for i in range(0, num_pages - 1):
         print(i, num_pages, num_pages - i)
-        writer.addPage(reader_front.getPage(i))
-    writer.addPage(reader_back.getPage(0))
+        writer.add_page(reader_front.pages[i])
+    writer.add_page(reader_back.getPage(0))
 
     with open(filename.replace(".pdf", "_merged.pdf"), "wb") as pdf_out:
         writer.write(pdf_out)
