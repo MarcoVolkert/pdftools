@@ -1,11 +1,11 @@
 import os
 from typing import List
 
-import PyPDF2
 import fpdf
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPDF
+import PyPDF2
 from natsort import natsorted
+from reportlab.graphics import renderPDF
+from svglib.svglib import svg2rlg
 
 __all__ = ["interlace", "interlace_per_dir", "merge", "merge_per_dir", "write_images", "merge_svgs_per_dir"]
 
@@ -17,14 +17,14 @@ def interlace(front_name: str, back_name: str, out_name: str):
     reader_back = PyPDF2.PdfReader(pdf_back)
     writer = PyPDF2.PdfWriter()
 
-    num_pages = reader_front.numPages
-    if not num_pages == reader_back.numPages:
+    num_pages = len(reader_front.pages)
+    if not num_pages == len(reader_back.pages):
         return
 
     for i in range(0, num_pages):
         print(i, num_pages, num_pages - i)
         writer.add_page(reader_front.pages[i])
-        writer.add_page(reader_back.getPage(num_pages - 1 - i))
+        writer.add_page(reader_back.pages[num_pages - 1 - i])
 
     with open(out_name, "wb") as pdf_out:
         writer.write(pdf_out)
@@ -65,7 +65,7 @@ def merge(filenames: List[str], output: str):
         pdf = open(filename, 'rb')
         reader = PyPDF2.PdfReader(pdf)
 
-        for i in range(0, reader.numPages):
+        for i in range(0, len(reader.pages)):
             writer.add_page(reader.pages[i])
 
         pdfs.append(pdf)
@@ -159,12 +159,12 @@ def replace_last_page(filename: str, lastpage: str):
     reader_back = PyPDF2.PdfReader(pdf_back)
     writer = PyPDF2.PdfWriter()
 
-    num_pages = reader_front.numPages
+    num_pages = len(reader_front.pages)
 
     for i in range(0, num_pages - 1):
         print(i, num_pages, num_pages - i)
         writer.add_page(reader_front.pages[i])
-    writer.add_page(reader_back.getPage(0))
+    writer.add_page(reader_back.pages[0])
 
     with open(filename.replace(".pdf", "_merged.pdf"), "wb") as pdf_out:
         writer.write(pdf_out)
